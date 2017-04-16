@@ -1,63 +1,84 @@
 'use strict';
 
 const expect = require('chai').expect;
-const packageService = require('../index.js');
+const PackageService = require('../lib/packageService.js');
 const fixtures = require('./fixtures');
 const rimraf = require('rimraf');
 
-const TEST_DIRECTORY = process.cwd() + '/packages';
+const opts = {
+  host: 'https://www.npmjs.com/browse/depended?offset=',
+  directory : './test-packages'
+}
+const TEST_DIRECTORY = process.cwd() + '/test-packages';
+
+let packageService;
+
+describe('packageService init + getPackagesPerPage', function() {
+  this.timeout(4000);
+
+  it ('Should initialize a packageService with num packages per page', done => {
+    packageService = new PackageService(opts, (err, numPackages) => {
+      if (err) return done(err);
+
+      //currently 36, but should be updated if NPM changes pagination
+      expect(numPackages).to.equal(36);
+      expect(Object.keys(packageService)).to.include.members([
+        'downloadPackages',
+        'findTopNumPackages',
+        'getPackageNames',
+        'parseHtmlPackages',
+        'findPagesUrls',
+        'downloadPackage',
+        'getPackagesPerPage'
+      ]);
+      done();
+    });
+  });
+});
 
 
-
-xdescribe('findPagesUrls', ()=> {
+describe('findPagesUrls', ()=> {
   const PAGE_COUNT = 36;
-  const HOST = 'https://www.npmjs.com/browse/depended?offset=';
 
   it('should create only one element array if < Page count', done => {
     const count = PAGE_COUNT-10;
-    const urls = packageService.findPagesUrls(count, PAGE_COUNT, HOST);
+    const urls = packageService.findPagesUrls(count);
     expect(urls.length).to.equal(1);
-    expect(urls[0][0]).to.equal(`${HOST}0`);
+    expect(urls[0][0]).to.equal(`${opts.host}0`);
     expect(urls[0][1]).to.equal(count);
     done();
   });
 
   it('last element should contain modulo of page count', done => {
     const count = PAGE_COUNT*2+5;
-    const urls = packageService.findPagesUrls(count, PAGE_COUNT, HOST);
+    const urls = packageService.findPagesUrls(count);
     expect(urls[urls.length -1][1]).to.equal(count%PAGE_COUNT);
     done();
   });
 
   it('should contain only count/pageCount elments if modulo of count and pagecount is 0', done => {
     const count = PAGE_COUNT*2;
-    const urls = packageService.findPagesUrls(count, PAGE_COUNT, HOST);
+    const urls = packageService.findPagesUrls(count);
     expect(urls.length).to.equal(2);
     done();
   });
 });
 
 
-xdescribe('parseHtmlPackages', () => {
+describe('parseHtmlPackages', () => {
   const html = fixtures.parseHtmlPackages.html;
 
   it('Should parse all packages', done => {
-    const packages = packageService.parseHtmlPackages(html, 36);
+    const packages = packageService.parseHtmlPackages(html);
 
-    expect(packages.length).to.equal(36);
+    expect(packages.length).to.equal(packageService.config.pageCount);
     expect(packages).to.deep.equal(fixtures.parseHtmlPackages.parsedPackages);
-    done();
-  });
-
-  it('Should throw if num is > number of packages in html', done => {
-    function fn() { parseHtmlPackages(html, 37);}
-    expect(fn).to.throw(Error);
     done();
   });
 });
 
 //Inconsistent usage of => vs function() due to this.timeout not support =>
-xdescribe('getPackageNames', function(){
+describe('getPackageNames', function(){
   //this fn uses a network call
   this.timeout(4000);
 
@@ -77,7 +98,7 @@ xdescribe('getPackageNames', function(){
 });
 
 
-xdescribe('findTopNumPackages', function () {
+describe('findTopNumPackages', function () {
   this.timeout(10000);
 
   const PACKAGE_COUNT = 66;
@@ -93,7 +114,7 @@ xdescribe('findTopNumPackages', function () {
 });
 
 
-xdescribe('downloadPackage', function () {
+describe('downloadPackage', function () {
   this.timeout(2000000);
   const packageInfo = { name: 'request', version: '2.81.0' };
 

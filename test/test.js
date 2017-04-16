@@ -4,7 +4,7 @@ const test = require('tape')
 const series = require('run-series')
 const fs = require('fs')
 const folderSize = require('get-folder-size')
-const PackageService = require('../').PackageService;
+const PackageService = require('../lib/packageService');
 
 const packageService = new PackageService({}, (err) => {
   if (err) throw err;

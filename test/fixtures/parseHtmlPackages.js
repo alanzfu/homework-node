@@ -32,13 +32,7 @@ module.exports = {
     { name: 'morgan', version: '1.8.1' },
     { name: 'mime', version: '1.3.4' },
     { name: 'babel-polyfill', version: '6.23.0' },
-    { name: 'cookie-parser', version: '1.4.3' },
-    { name: 'babel-loader', version: '6.4.1' },
-    { name: 'ramda', version: '0.23.0' },
-    { name: 'marked', version: '0.3.6' },
-    { name: 'underscore.string', version: '3.3.4' },
-    { name: 'immutable', version: '3.8.1' },
-    { name: 'request-promise', version: '4.2.0' }
+    { name: 'cookie-parser', version: '1.4.3' }
   ],
   parsedPackages: [
     { name: 'lodash', version: '4.17.4' },

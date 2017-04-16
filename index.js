@@ -4,14 +4,16 @@ const async = require('async');
 const fs = require('fs');
 const debug = require('debug')('homework-node:index:');
 const request = require('request');
-const tarballDownloader = require('download-package-tarball').download;
+const tarballDownloader = require('download-package-tarball');
+const tarbalUrlGenerator = require('get-npm-tarball-url').default;
+
+
 const _ = require('lodash');
 const cheerio = require('cheerio');
 
 //CONSTANTS (Should be pulled from config);
 const NPM_TOP_HOST = process.env.NPM_TOP_HOST || 'https://www.npmjs.com/browse/depended?offset=';
 const DIRECTORY = process.env.DIRECTORY || './packages';
-const PACKAGE_HOST = process.env.PACKAGE_HOST || 'https://registry.npmjs.org';
 const NPM_PAGE_COUNT = process.env.NPM_PAGE_COUNT || 36; //TODO Write a fn that determines this number
 
 module.exports = {
@@ -19,7 +21,8 @@ module.exports = {
   findPagesUrls: findPagesUrls,
   parseHtmlPackages: parseHtmlPackages,
   getPackageNames: getPackageNames,
-  findTopNumPackages: findTopNumPackages
+  findTopNumPackages: findTopNumPackages,
+  downloadPackage: downloadPackage
 };
 
 
@@ -31,10 +34,10 @@ function downloadPackages (count, callback) {
     if (err) return callback(err);
 
     debug(`downloadPackages:${packageNames.length} packages found.`);
-    async.each(packageNames, (pkgName, cb) => {
+    async.each(packageNames, (pkg, cb) => {
       if (err) return cb(err);
 
-      downloadPackage(pkgName, cb);
+      downloadPackage(pkg, cb);
     },
     err => {
       if (err) return cb(err);
@@ -47,6 +50,8 @@ function downloadPackages (count, callback) {
 //finds top packages from NPM
 function findTopNumPackages (count, callback) {
   const urls = findPagesUrls(count, NPM_PAGE_COUNT, NPM_TOP_HOST);
+
+  console.log(urls.length);
   let packageArr = [];
 
   async.forEachOf(urls, (url, i, cb) => {
@@ -91,16 +96,14 @@ function parseHtmlPackages(html, num) {
   let version;
 
 
-  $('a.version').each((i, jqObj) => {
+  $('a.version').each((i, cheerioObj) => {
     //cheerio doesn't behave the same as jquery, can't get .text() of this obj
     //therefore using slice;
-
-    version = jqObj.children[0].data;
-    name = jqObj.attribs.href.slice(9);
+    version = cheerioObj.children[0].data;
+    name = cheerioObj.attribs.href.slice(9);
     packages.push({name, version});
   });
 
-  debug('parseHtmlPackages: packages parsed -> ', packages);
 
   //Enables us to discover if npm has changed page count
   if (packages.length < num) throw new Error('Packages found <  Num');
@@ -108,6 +111,7 @@ function parseHtmlPackages(html, num) {
   //If last page, returns correct number of packages, not all of them
   if (packages.length > num) packages = packages.slice(0, num);
 
+  debug('parseHtmlPackages: packages parsed -> ', packages);
   return packages;
 }
 
@@ -153,6 +157,17 @@ function iteratePackages (packages, callback) {
 }
 
 //downloads a single package
-function downloadPackage (packageName, callback) {
-  tarballDownloader()
+function downloadPackage (packageInfo, callback) {
+  const url = tarbalUrlGenerator(packageInfo.name, packageInfo.version);
+  debug('Tarball Download Url:', url);
+  tarballDownloader({
+    url: url,
+    dir: DIRECTORY
+  }).then(()=> {
+    callback();
+    
+  }).catch(err => {
+    if (err) return callback(err);
+    debug(`Downloaded ${JSON.stringify(packageInfo)}`);
+  });
 }

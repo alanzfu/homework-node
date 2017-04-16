@@ -33,3 +33,22 @@ describe('findPagesUrls', ()=> {
     done();
   });
 });
+
+
+describe('parseHtmlPackages', () => {
+  const html = fixtures.parseHtmlPackages.html;
+
+  it('Should parse all packages', done => {
+    const packages = packageService.parseHtmlPackages(html, 36);
+
+    expect(packages.length).to.equal(36);
+    expect(packages).to.deep.equal(fixtures.parseHtmlPackages.parsedPackages);
+    done();
+  });
+
+  it('Should throw if num is > number of packages in html', done => {
+    function fn() { parseHtmlPackages(html, 37);}
+    expect(fn).to.throw(Error);
+    done();
+  });
+});

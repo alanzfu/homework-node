@@ -4,6 +4,7 @@
   },
   "dependencies": {
     "async": "^2.3.0",
+    "cheerio": "^0.22.0",
     "debug": "^2.6.3",
     "download-package-tarball": "^1.0.5",
     "request": "^2.81.0"

@@ -12,7 +12,12 @@ const DIRECTORY = process.env.DIRECTORY || './packages';
 const PACKAGE_HOST = process.env.PACKAGE_HOST || 'https://registry.npmjs.org';
 const NPM_PAGE_COUNT = process.env.NPM_PAGE_COUNT || 36; //TODO Write a fn that determines this number
 
-module.exports = downloadPackages
+module.exports = {
+  downloadPackages: downloadPackages,
+  findPagesUrls: findPagesUrls
+};
+
+
 
 
 //entry point for package downloader
@@ -35,28 +40,47 @@ function findTopNumPackages (count, callback) {
   //fn to determine how many pages to download, which outputs an array of urls
   //fn that takes array and async downloads and parse the pages into sorted array of packages
   const Urls = determinePagesUrls(count);
-  async.parallel(urls)
+  async.forEachOf(Urls, (url, i, cb) => {
+    //url: [host, numPackages]
+    getPackageNames(url[0], url[1], (err, packages) => {
+
+    });
+
+  }, (err) => {
+    if (err) return callback(err);
+    callback()
+
+  });
 }
 
 /*
   Based on count input, determines how many pages of NPM must be parsed
   Returns an object of URLs as key + count for each
 */
-function determinePagesUrls (count, pageCount, host) {
+function findPagesUrls (count, pageCount, host) {
+  let result = [];
+
   const pages = Math.floor(count/pageCount);
   const lastPageCount = count%pageCount;
 
-  let result = [];
   let pageInfo;
-  let currentPage;
+  let currentPage = 0;
+  let offsetVal;
+  let packageCountForPage;
 
-  for (currentPage = 0; currentPage < pages; currentPage++) {
-    pageInfo = [`host${i*pageCount}`, pageCount]
+  for (currentPage; currentPage < pages; currentPage++) {
+    offsetVal = currentPage*pageCount;
+    packageCountForPage = count - currentPage*pageCount
+
+    pageInfo = [`${host}${offsetVal}`, packageCountForPage];
     result.push(pageInfo);
   }
 
+
   if (lastPageCount > 0) {
-    pageInfo = [`host${currentPage*pageCount + lastPageCount}`, pageCount];
+    offsetVal = currentPage*pageCount;
+    pageInfo = [`${host}${offsetVal}`, lastPageCount];
+
     result.push(pageInfo);
   }
 

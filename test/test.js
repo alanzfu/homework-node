@@ -6,6 +6,8 @@ const fs = require('fs')
 const folderSize = require('get-folder-size')
 const download = require('./')
 
+require('./packageServiceSpec.js');
+
 test('download', function (t) {
   t.plan(3)
 
@@ -41,4 +43,4 @@ test('download', function (t) {
     t.equal(typeof _.map, 'function', '_.map exists')
     callback()
   }
-})
+});

@@ -4,43 +4,47 @@ const test = require('tape')
 const series = require('run-series')
 const fs = require('fs')
 const folderSize = require('get-folder-size')
-const download = require('./')
+const PackageService = require('../').PackageService;
 
-require('./packageServiceSpec.js');
+const packageService = new PackageService({}, (err) => {
+  if (err) throw err;
 
-test('download', function (t) {
-  t.plan(3)
+  const download = packageService.downloadPackages;
 
-  const COUNT = parseInt(process.env.COUNT, 10) || 10
+  test('download', function (t) {
+    t.plan(3)
 
-  series([
-    (callback) => download(COUNT, callback),
-    verifyCount,
-    verifySize,
-    verifyLodash
-  ], t.end)
+    const COUNT = parseInt(process.env.COUNT, 10) || 10
 
-  function verifyCount (callback) {
-    fs.readdir('./packages', function (err, files) {
-      if (err) return callback(err)
-      // Filter .gitignore and other hidden files
-      files = files.filter((file) => !/^\./.test(file))
-      t.equal(files.length, COUNT, `has ${COUNT} files`)
-      callback()
-    })
-  }
+    series([
+      (callback) => download(COUNT, callback),
+      verifyCount,
+      verifySize,
+      verifyLodash
+    ], t.end)
 
-  function verifySize (callback) {
-    folderSize('./packages', function (err, size) {
-      if (err) return callback(err)
-      t.ok(size / 1024 > 5 * COUNT, 'min 5k per package')
-      callback()
-    })
-  }
+    function verifyCount (callback) {
+      fs.readdir('./packages', function (err, files) {
+        if (err) return callback(err)
+        // Filter .gitignore and other hidden files
+        files = files.filter((file) => !/^\./.test(file))
+        t.equal(files.length, COUNT, `has ${COUNT} files`)
+        callback()
+      })
+    }
 
-  function verifyLodash (callback) {
-    const _ = require('./packages/lodash')
-    t.equal(typeof _.map, 'function', '_.map exists')
-    callback()
-  }
+    function verifySize (callback) {
+      folderSize('./packages', function (err, size) {
+        if (err) return callback(err);
+        t.ok(size / 1024 > 5 * COUNT, 'min 5k per package');
+        callback()
+      });
+    }
+
+    function verifyLodash (callback) {
+      const _ = require('../packages/lodash');
+      t.equal(typeof _.map, 'function', '_.map exists');
+      callback();
+    }
+  });
 });

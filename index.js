@@ -1,6 +1,5 @@
 'use strict'
 
-const PackageService = require('./lib/packageService');
-const service = new PackageService({
-  
-})
+module.exports = {
+  PackageService: require('./lib/packageService')
+};

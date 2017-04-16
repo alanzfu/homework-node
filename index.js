@@ -5,7 +5,7 @@ const PackageService = require('./lib/packageService');
 const packageService = new PackageService(err => {
   if (err) throw err;
 
-  const count = Number(process.argv[2]) || process.env.COUNT || 10;
+  const count = Number(process.argv[2] || process.env.COUNT || 10);
   debug(`${count} Packages Comin Up!`);
   packageService.downloadPackages(count);
 });

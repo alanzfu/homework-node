@@ -17,7 +17,8 @@ const NPM_PAGE_COUNT = process.env.NPM_PAGE_COUNT || 36; //TODO Write a fn that 
 module.exports = {
   downloadPackages: downloadPackages,
   findPagesUrls: findPagesUrls,
-  parseHtmlPackages: parseHtmlPackages
+  parseHtmlPackages: parseHtmlPackages,
+  getPackageNames: getPackageNames
 };
 
 
@@ -97,7 +98,7 @@ function parseHtmlPackages(html, num) {
 
   //If last page, returns correct number of packages, not all of them
   if (packages.length > num) packages = packages.slice(0, num);
-  
+
   return packages;
 }
 

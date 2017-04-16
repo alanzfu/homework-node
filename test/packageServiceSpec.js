@@ -52,3 +52,41 @@ describe('parseHtmlPackages', () => {
     done();
   });
 });
+
+//Inconsistent usage of => vs function() due to this.timeout not support =>
+describe('getPackageNames', function(){
+  //this fn uses a network call
+  this.timeout(4000);
+
+  const URL = 'https://www.npmjs.com/browse/depended?offset=36';
+  const PACKAGE_COUNT = 30;
+
+  it('Should get all the package names for 1 page', (done) => {
+    packageService.getPackageNames(URL, PACKAGE_COUNT, (err, packageNames) => {
+      if (err) return done(err);
+
+      expect(packageNames.length).to.equal(PACKAGE_COUNT);
+      expect(packageNames).to.deep.equal(fixtures.parseHtmlPackages.parsedPackagesPageTwo);
+      done();
+    });
+  });
+});
+
+
+describe('findTopNumPackages', function () {
+  this.timeout(10000);
+
+  const PACKAGE_COUNT = 66;
+  const parsedPackageNames = fixtures.parseHtmlPackages.parsedPackages.concat(fixtures.parseHtmlPackages.parsedPackagesPageTwo);
+
+  it('Should get all the packages names given a count across multiple pages', (done) => {
+    packageService.findTopNumPackages(PACKAGE_COUNT, (err, packageNames) => {
+      if (err) return done(err);
+
+      expect(packageNames.length).to.equal(PACKAGE_COUNT);
+      expect(packageNames).to.deep.equal(parsedPackageNames);
+      done();
+    });
+  });
+
+});

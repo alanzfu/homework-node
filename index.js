@@ -5,6 +5,7 @@ const fs = require('fs');
 const debug = require('debug')('homework-node:index:');
 const request = require('request');
 const tarballDownloader = require('download-package-tarball').download;
+const _ = require('lodash');
 
 //CONSTANTS (Should be pulled from config);
 const NPM_TOP_HOST = process.env.NPM_TOP_HOST || 'https://www.npmjs.com/browse/depended?offset=';
@@ -37,19 +38,23 @@ function downloadPackages (count, callback) {
 
 //finds top packages from NPM
 function findTopNumPackages (count, callback) {
-  //fn to determine how many pages to download, which outputs an array of urls
-  //fn that takes array and async downloads and parse the pages into sorted array of packages
   const Urls = determinePagesUrls(count);
+  const packageArr = [];
+
   async.forEachOf(Urls, (url, i, cb) => {
     //url: [host, numPackages]
     getPackageNames(url[0], url[1], (err, packages) => {
-
+      if (err) return cb(err);
+      //insert packages at i-th position to ensure that packages are in correct order
+      packageArr[i] = packages;
+      cb();
     });
 
   }, (err) => {
     if (err) return callback(err);
-    callback()
-
+    packageArr = _.flatten(packageArr);
+    debug(`Packages to download: ${packageArr.count}`);
+    callback(null, packageArr);
   });
 }
 

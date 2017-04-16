@@ -90,12 +90,28 @@ xdescribe('findTopNumPackages', function () {
 });
 
 
-describe('downloadPackage', function () {
+xdescribe('downloadPackage', function () {
   this.timeout(2000000);
   const packageInfo = { name: 'request', version: '2.81.0' };
 
   it('Should download a package and put it into a destination!', done => {
     packageService.downloadPackage(packageInfo, err => {
+      if (err) return done(err);
+
+      done();
+    });
+  });
+});
+
+describe('downloadPackages', function () {
+  this.timeout(2000);
+  const COUNT = 2;
+
+  //clean out test-packages directory prior to test
+  before()
+
+  it('Should find all the info and put the packages into a destination!', done => {
+    packageService.downloadPackages(2, err => {
       if (err) return done(err);
 
       done();

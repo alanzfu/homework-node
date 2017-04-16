@@ -22,7 +22,8 @@ module.exports = {
   parseHtmlPackages: parseHtmlPackages,
   getPackageNames: getPackageNames,
   findTopNumPackages: findTopNumPackages,
-  downloadPackage: downloadPackage
+  downloadPackage: downloadPackage,
+  downloadPackages: downloadPackages
 };
 
 
@@ -51,7 +52,6 @@ function downloadPackages (count, callback) {
 function findTopNumPackages (count, callback) {
   const urls = findPagesUrls(count, NPM_PAGE_COUNT, NPM_TOP_HOST);
 
-  console.log(urls.length);
   let packageArr = [];
 
   async.forEachOf(urls, (url, i, cb) => {
@@ -152,9 +152,6 @@ function findPagesUrls (count, pageCount, host) {
   return result;
 }
 
-function iteratePackages (packages, callback) {
-
-}
 
 //downloads a single package
 function downloadPackage (packageInfo, callback) {
@@ -165,7 +162,7 @@ function downloadPackage (packageInfo, callback) {
     dir: DIRECTORY
   }).then(()=> {
     callback();
-    
+
   }).catch(err => {
     if (err) return callback(err);
     debug(`Downloaded ${JSON.stringify(packageInfo)}`);

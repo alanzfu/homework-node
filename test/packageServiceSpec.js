@@ -3,6 +3,9 @@
 const expect = require('chai').expect;
 const packageService = require('../index.js');
 const fixtures = require('./fixtures');
+const rimraf = require('rimraf');
+
+const TEST_DIRECTORY = process.cwd() + '/packages';
 
 
 
@@ -104,16 +107,20 @@ xdescribe('downloadPackage', function () {
 });
 
 describe('downloadPackages', function () {
-  this.timeout(2000);
+  this.timeout(10000);
   const COUNT = 2;
 
   //clean out test-packages directory prior to test
-  before()
+  before(done => {
+    rimraf(TEST_DIRECTORY, done);
+  });
+
 
   it('Should find all the info and put the packages into a destination!', done => {
-    packageService.downloadPackages(2, err => {
+    packageService.downloadPackages(COUNT, err => {
       if (err) return done(err);
 
+      //TODO: Use FS Module to verify packages are downloaded
       done();
     });
   });

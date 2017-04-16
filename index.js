@@ -162,9 +162,9 @@ function downloadPackage (packageInfo, callback) {
     dir: DIRECTORY
   }).then(()=> {
     callback();
-
+    debug(`Downloaded ${JSON.stringify(packageInfo)}`);
+    
   }).catch(err => {
     if (err) return callback(err);
-    debug(`Downloaded ${JSON.stringify(packageInfo)}`);
   });
 }

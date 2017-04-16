@@ -54,7 +54,7 @@ describe('parseHtmlPackages', () => {
 });
 
 //Inconsistent usage of => vs function() due to this.timeout not support =>
-xdescribe('getPackageNames', function(){
+describe('getPackageNames', function(){
   //this fn uses a network call
   this.timeout(4000);
 

@@ -88,5 +88,4 @@ describe('findTopNumPackages', function () {
       done();
     });
   });
-
 });

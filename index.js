@@ -18,7 +18,8 @@ module.exports = {
   downloadPackages: downloadPackages,
   findPagesUrls: findPagesUrls,
   parseHtmlPackages: parseHtmlPackages,
-  getPackageNames: getPackageNames
+  getPackageNames: getPackageNames,
+  findTopNumPackages: findTopNumPackages
 };
 
 
@@ -42,8 +43,9 @@ function downloadPackages (count, callback) {
 //finds top packages from NPM
 function findTopNumPackages (count, callback) {
   const urls = findPagesUrls(count);
-  const packageArr = [];
+  let packageArr = [];
 
+  console.log(urls);
   async.forEachOf(urls, (url, i, cb) => {
     //url: [host, numPackages]
     getPackageNames(url[0], url[1], (err, packages) => {
@@ -113,13 +115,15 @@ function findPagesUrls (count, pageCount, host) {
   const lastPageCount = count%pageCount;
 
   let pageInfo;
-  let currentPage = 0;
+  let currentPage;
   let offsetVal;
   let packageCountForPage;
 
-  for (currentPage; currentPage < pages; currentPage++) {
+  for (currentPage = 0; currentPage < pages; currentPage++) {
     offsetVal = currentPage*pageCount;
-    packageCountForPage = count - currentPage*pageCount
+    packageCountForPage = count - currentPage*pageCount;
+
+    packageCountForPage = packageCountForPage > pageCount ? pageCount : packageCountForPage;
 
     pageInfo = [`${host}${offsetVal}`, packageCountForPage];
     result.push(pageInfo);
@@ -133,6 +137,7 @@ function findPagesUrls (count, pageCount, host) {
     result.push(pageInfo);
   }
 
+  debug('findPagesUrls:',result);
   return result;
 }
 

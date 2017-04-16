@@ -42,10 +42,9 @@ function downloadPackages (count, callback) {
 
 //finds top packages from NPM
 function findTopNumPackages (count, callback) {
-  const urls = findPagesUrls(count);
+  const urls = findPagesUrls(count, NPM_PAGE_COUNT, NPM_TOP_HOST);
   let packageArr = [];
 
-  console.log(urls);
   async.forEachOf(urls, (url, i, cb) => {
     //url: [host, numPackages]
     getPackageNames(url[0], url[1], (err, packages) => {
@@ -59,7 +58,7 @@ function findTopNumPackages (count, callback) {
     if (err) return callback(err);
 
     packageArr = _.flatten(packageArr);
-    debug(`Packages to download: ${packageArr.count}`);
+    debug(`Packages to download: ${packageArr.length}`);
     callback(null, packageArr);
   });
 }

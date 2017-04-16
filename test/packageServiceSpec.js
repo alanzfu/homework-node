@@ -66,7 +66,7 @@ describe('getPackageNames', function(){
       if (err) return done(err);
 
       expect(packageNames.length).to.equal(PACKAGE_COUNT);
-      expect(packageNames).to.deep.equal(fixtures.parseHtmlPackages.parsedPackagesPageTwo);
+      expect(packageNames).to.have.same.members(fixtures.parseHtmlPackages.parsedPackagesPageTwo);
       done();
     });
   });
@@ -84,7 +84,7 @@ describe('findTopNumPackages', function () {
       if (err) return done(err);
 
       expect(packageNames.length).to.equal(PACKAGE_COUNT);
-      expect(packageNames).to.deep.equal(parsedPackageNames);
+      expect(packageNames).to.have.same.members(parsedPackageNames);
       done();
     });
   });

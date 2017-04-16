@@ -10,8 +10,8 @@ const opts = {
   directory : './test-packages'
 }
 const TEST_DIRECTORY = process.cwd() + '/test-packages';
-
 let packageService;
+
 
 describe('packageService init + getPackagesPerPage', function() {
   this.timeout(4000);

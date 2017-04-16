@@ -8,6 +8,7 @@
     "debug": "^2.6.3",
     "download-package-tarball": "^1.0.5",
     "get-npm-tarball-url": "^2.0.0",
+    "is2": "^1.0.9",
     "request": "^2.81.0",
     "rimraf": "^2.6.1"
   },

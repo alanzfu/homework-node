@@ -6,7 +6,7 @@ const fs = require('fs')
 const folderSize = require('get-folder-size')
 const PackageService = require('../lib/packageService');
 
-const packageService = new PackageService({}, (err) => {
+const packageService = new PackageService(err => {
   if (err) throw err;
 
   const download = packageService.downloadPackages;

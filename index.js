@@ -27,14 +27,18 @@ module.exports = {
 
 //entry point for package downloader
 function downloadPackages (count, callback) {
-  findTopNumPackages(count, (err, packages) => {
+  findTopNumPackages(count, (err, packageNames) => {
     if (err) return callback(err);
 
-    debug(`downloadPackages:${packages.length} packages found.`);
-    iteratePackages(packages, (err) => {
-      if (err) return callback(err);
+    debug(`downloadPackages:${packageNames.length} packages found.`);
+    async.each(packageNames, (pkgName, cb) => {
+      if (err) return cb(err);
 
-      debug(`Successfully downloaded ${packages.length} packages`);
+      downloadPackage(pkgName, cb);
+    },
+    err => {
+      if (err) return cb(err);
+      debug(`Successfully downloaded ${packageNames.length} packages`);
       callback();
     });
   });
@@ -83,13 +87,17 @@ function getPackageNames(npmUrl, numberOfPackages, cb) {
 function parseHtmlPackages(html, num) {
   const $ = cheerio.load(html);
   let packages = []
-  let packageName;
+  let name;
+  let version;
 
-  $('a.name').each((i, jqObj) => {
+
+  $('a.version').each((i, jqObj) => {
     //cheerio doesn't behave the same as jquery, can't get .text() of this obj
     //therefore using slice;
-    packageName = jqObj.attribs.href.slice(9);
-    packages.push(packageName);
+
+    version = jqObj.children[0].data;
+    name = jqObj.attribs.href.slice(9);
+    packages.push({name, version});
   });
 
   debug('parseHtmlPackages: packages parsed -> ', packages);
@@ -145,6 +153,6 @@ function iteratePackages (packages, callback) {
 }
 
 //downloads a single package
-function downloadPackage (packageUrl, callback) {
-
+function downloadPackage (packageName, callback) {
+  tarballDownloader()
 }

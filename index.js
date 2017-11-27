@@ -10,8 +10,8 @@ const _ = require('lodash');
 const cheerio = require('cheerio');
 const is = require('is2');
 
-
 const NPM_URL = process.env.HOST || 'https://www.npmjs.com/browse/depended?offset=';
+
 
 /*
   Finds items per page for pagination;
@@ -61,9 +61,6 @@ function parseHtmlPackages (html){
 
 
   $('a.type-neutral-1').each((i, cheerioObj) => {
-    //cheerio doesn't behave the same as jquery, can't get .text() of this obj
-    //therefore using slice;
-
     //Extracting the version information
     version = cheerioObj.children[0].data;
 
@@ -105,26 +102,27 @@ function findTopNumPackages (count, callback){
       if (err) return callback(err);
 
       pageCount = Math.ceil(count/packagesPerPage);
-    });
 
-    let packageArr = [];
+      let packageArr = [];
 
-    //Limit to 10 concurrent calls
-    async.timesLimit(pageCount, 10, (n, cb) => {
-      getPackageNames(`${NPM_URL}${n-1}`, (err, packages) => {
-        if (err) return cb(err);
+      //Limit to 10 concurrent calls
+      async.timesLimit(pageCount, 10, (n, cb) => {
+        //get the name of the packages
+        getPackageNames(`${NPM_URL}${n-1}`, (err, packages) => {
+          if (err) return cb(err);
 
-        //insert packages at n-th position to ensure that packages are in correct order
-        packageArr.push = packages;
-        cb();
+          packageArr = packageArr.concat(packages)
+          cb();
+        });
+      }, err => {
+        if (err) return callback(err);
+
+        //return the packages as an array
+        packageArr = packageArr.slice(0,count);
+        callback(null, packageArr);
       });
-    }, err => {
-      if (err) return callback(err);
-
-      packageArr = _.flatten(packageArr);
-      packageArr = packageArr.slice(count);
-      callback(null, packageArr);
     });
+
 }
 
 //entry point for package downloader
@@ -134,10 +132,10 @@ function downloadPackages (count, callback){
     if (err) return callback(err);
 
     debug(`downloadPackages:${packageNames.length} packages found.`);
-    async.each(packageNames, (pkg, cb) => {
+    async.eachLimit(packageNames, 10,(pkg, cb) => {
       if (err) return cb(err);
 
-      downloadPackage(pkg, cb);
+      downloadPackage(pkg.name, pkg.version, './packages', cb);
     }, err => {
       if (err) {
         if (callback) return callback(err);
@@ -155,5 +153,7 @@ module.exports = {
   downloadPackages: downloadPackages,
   downloadPackage: downloadPackage,
   getPackagesPerPage: getPackagesPerPage,
-  parseHtmlPackages: parseHtmlPackages
+  parseHtmlPackages: parseHtmlPackages,
+  findTopNumPackages: findTopNumPackages,
+  getPackageNames: getPackageNames
 };

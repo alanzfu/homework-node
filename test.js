@@ -15,7 +15,7 @@ test('download', function (t) {
   const COUNT = parseInt(process.env.COUNT, 10) || 10
 
   series([
-    // (callback) => download(COUNT, callback),
+    (callback) => download(COUNT, callback),
     verifyCount,
     verifySize,
     verifyLodash

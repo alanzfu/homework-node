@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node test.js"
   },
   "dependencies": {
     "async": "^2.3.0",

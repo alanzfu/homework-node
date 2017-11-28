@@ -4,7 +4,7 @@ const test = require('tape')
 const series = require('run-series')
 const fs = require('fs')
 const folderSize = require('get-folder-size')
-const downloadPackages = require('../index.js').downloadPackages;
+const downloadPackages = require('./index.js').downloadPackages;
 
 const download = downloadPackages;
 
@@ -39,7 +39,7 @@ test('download', function (t) {
   }
 
   function verifyLodash (callback) {
-    const _ = require('../packages/lodash');
+    const _ = require('./packages/lodash');
     t.equal(typeof _.map, 'function', '_.map exists');
     callback();
   }

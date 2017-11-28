@@ -19,7 +19,7 @@ const DIRECTORY = './packages';
   @params {string} html - raw html of the npm page
   @returns {Array} - array of objects {name, version} returned within array
 */
-function parseHtmlPackages (html){
+function parseHtmlPackages (html) {
   const $ = cheerio.load(html);
   let packages = [];
   let name;
@@ -65,23 +65,30 @@ function getPackageNames (npmUrl, cb) {
   @params {int} count - num of top packages
   @params {function} callback
 */
-function findTopNumPackages (count, callback){
+function findTopNumPackages (count, callback) {
     let pageCount = 1;
 
     //Gets first page of packages to find out how many there are per page
-    getPackageNames((err, packages) => {
+    let url = NPM_URL;
+    getPackageNames(NPM_URL, (err, packages) => {
       if (err) return callback(err);
 
       const packagesPerPage = packages.length;
       debug(`Packages per page: ${packagesPerPage}`);
 
-      pageCount = Math.ceil(count/packagesPerPage);
+      pageCount = Math.ceil(count/packagesPerPage) - 1;
+      debug(`Total additional pages to request: ${pageCount}`);
+
 
       //Requests packages from additional pages if needed
       //Limit to 10 concurrent calls
-      async.timesLimit(pageCount - 1, 10, (n, cb) => {
+      async.timesLimit(pageCount, 10, (n, cb) => {
+        //offset by number of packages per page
+        url = `${NPM_URL}${(n+1)*packagesPerPage}`
+        debug(`Requesting packages from: ${url}`);
+
         //get the name of the packages
-        getPackageNames(`${NPM_URL}${n}`, (err, pkgs) => {
+        getPackageNames(url,(err, pkgs) => {
           if (err) return cb(err);
 
           packages = packages.concat(pkgs)
@@ -128,13 +135,13 @@ function downloadPackage (name, version, directory, callback) {
   @params {int} count - num of top packages
   @params {function} callback
 */
-function downloadPackages (count, callback){
+function downloadPackages (count, callback) {
 
   findTopNumPackages(count, (err, packageNames) => {
     if (err) return callback(err);
 
     debug(`downloadPackages:${packageNames.length} packages found.`);
-    async.eachLimit(packageNames, 10,(pkg, cb) => {
+    async.eachLimit(packageNames, 10, (pkg, cb) => {
       if (err) return cb(err);
 
       downloadPackage(pkg.name, pkg.version, DIRECTORY, cb);
@@ -154,7 +161,6 @@ function downloadPackages (count, callback){
 module.exports = {
   downloadPackages: downloadPackages,
   downloadPackage: downloadPackage,
-  getPackagesPerPage: getPackagesPerPage,
   parseHtmlPackages: parseHtmlPackages,
   findTopNumPackages: findTopNumPackages,
   getPackageNames: getPackageNames

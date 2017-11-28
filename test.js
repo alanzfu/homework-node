@@ -15,7 +15,7 @@ test('download', function (t) {
   const COUNT = parseInt(process.env.COUNT, 10) || 10
 
   series([
-    (callback) => download(COUNT, callback),
+    // (callback) => download(COUNT, callback),
     verifyCount,
     verifySize,
     verifyLodash
@@ -42,8 +42,11 @@ test('download', function (t) {
         fs.readdir(`./packages/${name}`, (err, subFiles) => {
           if (err) return cb(err);
           subFiles = subFiles.filter((subFile) => {
-              files.push(`${name}/${subFile}`);
-              return !/^\./.test(subFiles);
+              if (!/^\./.test(subFiles)) {
+                files.push(`${name}/${subFile}`);
+                return true;
+              }
+              return false;
           });
 
           cb();

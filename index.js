@@ -15,49 +15,6 @@ const DIRECTORY = './packages';
 
 
 /*
-  Finds number of packages on a single page of npm
-  @param {function} callback - optional callback given packages per page
-*/
-function getPackagesPerPage(callback) {
-  const url = NPM_URL + '0';
-  debug('Looking for packages per page on: ', url);
-
-  request(url, (err, resp, body) => {
-    if (err) return callback(err);
-
-    const packagesPerPage = parseHtmlPackages(body).length;
-    debug(`Packages per page: ${packagesPerPage}`);
-
-    callback(null, packagesPerPage);
-  });
-}
-
-
-/*
-  Downloads a single package
-  @params {string} name - name of package
-  @params {string} version - version of package
-  @params {string} directory - destination of the package
-  @params {function} callback
-*/
-function downloadPackage (name, version, directory, callback) {
-  const url = tarbalUrlGenerator(name, version);
-  debug('Tarball Download Url:', url);
-
-  tarballDownloader({
-    url: url,
-    dir: directory
-  }).then(()=> {
-    callback();
-    debug(`Downloaded ${name}:${version}`);
-
-  }).catch(err => {
-    if (err) return callback(err);
-  });
-}
-
-
-/*
   Parses html to find package names and verions
   @params {string} html - raw html of the npm page
   @returns {Array} - array of objects {name, version} returned within array
@@ -104,40 +61,66 @@ function getPackageNames (npmUrl, cb) {
 /*
   Finds package names given count,
   potentially making multiple requests if count exceeds packages available on one page
-  
+
   @params {int} count - num of top packages
   @params {function} callback
 */
 function findTopNumPackages (count, callback){
     let pageCount = 1;
 
-    //Finds number of pages to request (does not assume to be 36)
-    getPackagesPerPage((err, packagesPerPage) => {
+    //Gets first page of packages to find out how many there are per page
+    getPackageNames((err, packages) => {
       if (err) return callback(err);
+
+      const packagesPerPage = packages.length;
+      debug(`Packages per page: ${packagesPerPage}`);
 
       pageCount = Math.ceil(count/packagesPerPage);
 
-      let packageArr = [];
-
+      //Requests packages from additional pages if needed
       //Limit to 10 concurrent calls
-      async.timesLimit(pageCount, 10, (n, cb) => {
+      async.timesLimit(pageCount - 1, 10, (n, cb) => {
         //get the name of the packages
-        getPackageNames(`${NPM_URL}${n-1}`, (err, packages) => {
+        getPackageNames(`${NPM_URL}${n}`, (err, pkgs) => {
           if (err) return cb(err);
 
-          packageArr = packageArr.concat(packages)
+          packages = packages.concat(pkgs)
           cb();
         });
       }, err => {
         if (err) return callback(err);
 
         //return the packages as an array
-        packageArr = packageArr.slice(0,count);
-        callback(null, packageArr);
+        packages = packages.slice(0,count);
+        callback(null, packages);
       });
     });
-
 }
+
+
+/*
+  Downloads a single package
+  @params {string} name - name of package
+  @params {string} version - version of package
+  @params {string} directory - destination of the package
+  @params {function} callback
+*/
+function downloadPackage (name, version, directory, callback) {
+  const url = tarbalUrlGenerator(name, version);
+  debug('Tarball Download Url:', url);
+
+  tarballDownloader({
+    url: url,
+    dir: directory
+  }).then(()=> {
+    callback();
+    debug(`Downloaded ${name}:${version}`);
+
+  }).catch(err => {
+    if (err) return callback(err);
+  });
+}
+
 
 /*
   Entry point for package downloader

@@ -14,10 +14,10 @@ const NPM_URL = process.env.HOST || 'https://www.npmjs.com/browse/depended?offse
 const DIRECTORY = './packages';
 
 
-/*
-  Parses html to find package names and verions
-  @params {string} html - raw html of the npm page
-  @returns {Array} - array of objects {name, version} returned within array
+/**
+  * Parses html to find package names and verions
+  * @param {string} html - raw html of the npm page
+  * @returns {Array} - array of objects {name, version} returned within array
 */
 function parseHtmlPackages (html) {
   const $ = cheerio.load(html);
@@ -39,10 +39,10 @@ function parseHtmlPackages (html) {
   return packages;
 }
 
-/*
+/**
   Gets package names from a npmurl, parses html for package names and versions
-  @params {string} npmUrl - raw html of the npm page
-  @params {function} callback
+  @param {string} npmUrl - raw html of the npm page
+  @param {function} callback
 */
 function getPackageNames (npmUrl, cb) {
     request(npmUrl, (err, resp, html) => {
@@ -58,12 +58,12 @@ function getPackageNames (npmUrl, cb) {
     });
 }
 
-/*
+/**
   Finds package names given count,
   potentially making multiple requests if count exceeds packages available on one page
 
-  @params {int} count - num of top packages
-  @params {function} callback
+  @param {int} count - num of top packages
+  @param {function} callback
 */
 function findTopNumPackages (count, callback) {
     let pageCount = 1;
@@ -105,12 +105,12 @@ function findTopNumPackages (count, callback) {
 }
 
 
-/*
+/**
   Downloads a single package
-  @params {string} name - name of package
-  @params {string} version - version of package
-  @params {string} directory - destination of the package
-  @params {function} callback
+  @param {string} name - name of package
+  @param {string} version - version of package
+  @param {string} directory - destination of the package
+  @param {function} callback
 */
 function downloadPackage (name, version, directory, callback) {
   const url = tarbalUrlGenerator(name, version);
@@ -129,11 +129,11 @@ function downloadPackage (name, version, directory, callback) {
 }
 
 
-/*
+/**
   Entry point for package downloader
 
-  @params {int} count - num of top packages
-  @params {function} callback
+  @param {int} count - num of top packages
+  @param {function} callback
 */
 function downloadPackages (count, callback) {
 

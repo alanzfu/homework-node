@@ -11,10 +11,12 @@ const cheerio = require('cheerio');
 const is = require('is2');
 
 const NPM_URL = process.env.HOST || 'https://www.npmjs.com/browse/depended?offset=';
+const DIRECTORY = './packages';
 
 
 /*
-  Finds items per page for pagination;
+  Finds number of packages on a single page of npm
+  @param {function} callback - optional callback given packages per page
 */
 function getPackagesPerPage(callback) {
   const url = NPM_URL + '0';
@@ -33,7 +35,10 @@ function getPackagesPerPage(callback) {
 
 /*
   Downloads a single package
-  - @parameters: packageInfo -> {name: 'lodash', version: '2.3'}
+  @params {string} name - name of package
+  @params {string} version - version of package
+  @params {string} directory - destination of the package
+  @params {function} callback
 */
 function downloadPackage (name, version, directory, callback) {
   const url = tarbalUrlGenerator(name, version);
@@ -52,7 +57,11 @@ function downloadPackage (name, version, directory, callback) {
 }
 
 
-//given npm html, returns package names on that page's html
+/*
+  Parses html to find package names and verions
+  @params {string} html - raw html of the npm page
+  @returns {Array} - array of objects {name, version} returned within array
+*/
 function parseHtmlPackages (html){
   const $ = cheerio.load(html);
   let packages = [];
@@ -74,7 +83,9 @@ function parseHtmlPackages (html){
 }
 
 /*
-  requests and parses package names from a single url
+  Gets package names from a npmurl, parses html for package names and versions
+  @params {string} npmUrl - raw html of the npm page
+  @params {function} callback
 */
 function getPackageNames (npmUrl, cb) {
     request(npmUrl, (err, resp, html) => {
@@ -93,6 +104,9 @@ function getPackageNames (npmUrl, cb) {
 /*
   Finds package names given count,
   potentially making multiple requests if count exceeds packages available on one page
+  
+  @params {int} count - num of top packages
+  @params {function} callback
 */
 function findTopNumPackages (count, callback){
     let pageCount = 1;
@@ -125,7 +139,12 @@ function findTopNumPackages (count, callback){
 
 }
 
-//entry point for package downloader
+/*
+  Entry point for package downloader
+
+  @params {int} count - num of top packages
+  @params {function} callback
+*/
 function downloadPackages (count, callback){
 
   findTopNumPackages(count, (err, packageNames) => {
@@ -135,7 +154,7 @@ function downloadPackages (count, callback){
     async.eachLimit(packageNames, 10,(pkg, cb) => {
       if (err) return cb(err);
 
-      downloadPackage(pkg.name, pkg.version, './packages', cb);
+      downloadPackage(pkg.name, pkg.version, DIRECTORY, cb);
     }, err => {
       if (err) {
         if (callback) return callback(err);

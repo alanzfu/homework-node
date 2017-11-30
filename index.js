@@ -1,14 +1,11 @@
-'use strict'
+
 
 const async = require('async');
-const fs = require('fs');
 const debug = require('debug')('homework-node:packageService:');
 const request = require('request');
 const tarballDownloader = require('download-package-tarball');
 const tarbalUrlGenerator = require('get-npm-tarball-url').default;
-const _ = require('lodash');
 const cheerio = require('cheerio');
-const is = require('is2');
 
 const NPM_URL = process.env.HOST || 'https://www.npmjs.com/browse/depended?offset=';
 const DIRECTORY = './packages';
@@ -19,20 +16,20 @@ const DIRECTORY = './packages';
   * @param {string} html - raw html of the npm page
   * @returns {Array} - array of objects {name, version} returned within array
 */
-function parseHtmlPackages (html) {
+function parseHtmlPackages(html) {
   const $ = cheerio.load(html);
-  let packages = [];
+  const packages = [];
   let name;
   let version;
 
 
   $('a.type-neutral-1').each((i, cheerioObj) => {
-    //Extracting the version information
+    // Extracting the version information
     version = cheerioObj.children[0].data;
 
-    //Extracting the name information
+    // Extracting the name information
     name = cheerioObj.attribs.href.slice(9);
-    packages.push({name, version});
+    packages.push({ name, version });
   });
 
   debug('parseHtmlPackages: packages parsed -> ', packages);
@@ -44,18 +41,17 @@ function parseHtmlPackages (html) {
   @param {string} npmUrl - raw html of the npm page
   @param {function} callback
 */
-function getPackageNames (npmUrl, cb) {
-    request(npmUrl, (err, resp, html) => {
-      if (err) return cb(err);
+function getPackageNames(npmUrl, cb) {
+  request(npmUrl, (err, resp, html) => {
+    if (err) return cb(err);
 
-      const packages = parseHtmlPackages(html);
+    const packages = parseHtmlPackages(html);
 
-      if (packages) {
-        return cb(null, packages);
-      } else {
-        cb(new Error("No packages found given npm"));
-      }
-    });
+    if (packages) {
+      return cb(null, packages);
+    }
+    cb(new Error('No packages found given npm'));
+  });
 }
 
 /**
@@ -65,43 +61,43 @@ function getPackageNames (npmUrl, cb) {
   @param {int} count - num of top packages
   @param {function} callback
 */
-function findTopNumPackages (count, callback) {
-    let pageCount = 1;
+function findTopNumPackages(count, callback) {
+  let pageCount = 1;
 
-    //Gets first page of packages to find out how many there are per page
-    let url = NPM_URL;
-    getPackageNames(NPM_URL, (err, packages) => {
-      if (err) return callback(err);
+  // Gets first page of packages to find out how many there are per page
+  let url = NPM_URL;
+  getPackageNames(NPM_URL, (err, packages) => {
+    if (err) return callback(err);
 
-      const packagesPerPage = packages.length;
-      debug(`Packages per page: ${packagesPerPage}`);
+    const packagesPerPage = packages.length;
+    debug(`Packages per page: ${packagesPerPage}`);
 
-      pageCount = Math.ceil(count/packagesPerPage) - 1;
-      debug(`Total additional pages to request: ${pageCount}`);
+    pageCount = Math.ceil(count / packagesPerPage) - 1;
+    debug(`Total additional pages to request: ${pageCount}`);
 
 
-      //Requests packages from additional pages if needed
-      //Limit to 10 concurrent calls
-      async.timesLimit(pageCount, 10, (n, cb) => {
-        //offset by number of packages per page
-        url = `${NPM_URL}${(n+1)*packagesPerPage}`
-        debug(`Requesting packages from: ${url}`);
+    // Requests packages from additional pages if needed
+    // Limit to 10 concurrent calls
+    async.timesLimit(pageCount, 10, (n, cb) => {
+      // offset by number of packages per page
+      url = `${NPM_URL}${(n + 1) * packagesPerPage}`;
+      debug(`Requesting packages from: ${url}`);
 
-        //get the name of the packages
-        getPackageNames(url,(err, pkgs) => {
-          if (err) return cb(err);
+      // get the name of the packages
+      getPackageNames(url, (e, pkgs) => {
+        if (e) return cb(e);
 
-          packages = packages.concat(pkgs)
-          cb();
-        });
-      }, err => {
-        if (err) return callback(err);
-
-        //return the packages as an array
-        packages = packages.slice(0,count);
-        callback(null, packages);
+        packages = packages.concat(pkgs);
+        cb();
       });
+    }, (error) => {
+      if (error) return callback(error);
+
+      // return the packages as an array
+      packages = packages.slice(0, count);
+      callback(null, packages);
     });
+  });
 }
 
 
@@ -112,18 +108,17 @@ function findTopNumPackages (count, callback) {
   @param {string} directory - destination of the package
   @param {function} callback
 */
-function downloadPackage (name, version, directory, callback) {
+function downloadPackage(name, version, directory, callback) {
   const url = tarbalUrlGenerator(name, version);
   debug('Tarball Download Url:', url);
 
   tarballDownloader({
-    url: url,
-    dir: directory
-  }).then(()=> {
+    url,
+    dir: directory,
+  }).then(() => {
     callback();
     debug(`Downloaded ${name}:${version}`);
-
-  }).catch(err => {
+  }).catch((err) => {
     if (err) return callback(err);
   });
 }
@@ -135,8 +130,7 @@ function downloadPackage (name, version, directory, callback) {
   @param {int} count - num of top packages
   @param {function} callback
 */
-function downloadPackages (count, callback) {
-
+function downloadPackages(count, callback) {
   findTopNumPackages(count, (err, packageNames) => {
     if (err) return callback(err);
 
@@ -145,7 +139,7 @@ function downloadPackages (count, callback) {
       if (err) return cb(err);
 
       downloadPackage(pkg.name, pkg.version, DIRECTORY, cb);
-    }, err => {
+    }, (err) => {
       if (err) {
         if (callback) return callback(err);
         return;
@@ -159,9 +153,9 @@ function downloadPackages (count, callback) {
 
 
 module.exports = {
-  downloadPackages: downloadPackages,
-  downloadPackage: downloadPackage,
-  parseHtmlPackages: parseHtmlPackages,
-  findTopNumPackages: findTopNumPackages,
-  getPackageNames: getPackageNames
+  downloadPackages,
+  downloadPackage,
+  parseHtmlPackages,
+  findTopNumPackages,
+  getPackageNames,
 };

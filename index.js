@@ -139,9 +139,9 @@ function downloadPackages(count, callback) {
       if (err) return cb(err);
 
       downloadPackage(pkg.name, pkg.version, DIRECTORY, cb);
-    }, (err) => {
-      if (err) {
-        if (callback) return callback(err);
+    }, (error) => {
+      if (error) {
+        if (callback) return callback(error);
         return;
       }
 
